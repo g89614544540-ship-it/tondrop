@@ -11,54 +11,50 @@ interface Props {
 const Admin: React.FC<Props> = ({ auctions, onCreate, onDelete, onStop }) => {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
-  const [maxParticipants, setMaxParticipants] = useState('100');
-  const [seedPhrase, setSeedPhrase] = useState('');
-  const [hours, setHours] = useState('72');
+  const [max, setMax] = useState('100');
+  const [seed, setSeed] = useState('');
+  const [hrs, setHrs] = useState('72');
 
   const handleCreate = () => {
-    if (!title || !seedPhrase) {
+    if (!title || !seed) {
       alert('Заполните название и сид-фразу!');
       return;
     }
-    const words = seedPhrase.trim().split(/\s+/);
+    const words = seed.trim().split(/\s+/);
     if (words.length !== 24) {
-      alert('Сид-фраза должна содержать ровно 24 слова! Сейчас: ' + words.length);
+      alert('Нужно 24 слова! Сейчас: ' + words.length);
       return;
     }
-    onCreate({
-      title,
-      maxParticipants: parseInt(maxParticipants) || 100,
-      seedPhrase,
-      endsInHours: parseInt(hours) || 72
-    });
+    onCreate({ title, maxParticipants: parseInt(max) || 100, seedPhrase: seed, endsInHours: parseInt(hrs) || 72 });
     setTitle('');
-    setMaxParticipants('100');
-    setSeedPhrase('');
-    setHours('72');
+    setMax('100');
+    setSeed('');
+    setHrs('72');
     setShowForm(false);
     alert('Аукцион создан!');
   };
 
-  const activeCount = auctions.filter((a: any) => a.status === 'active').length;
-  const totalBids = auctions.reduce((s: number, a: any) => s + (a.totalBids || 0), 0);
+  const active = auctions.filter((a: any) => a.status === 'active').length;
+  const bids = auctions.reduce((s: number, a: any) => s + (a.totalBids || 0), 0);
+
+  const box = { background: '#1a2332', borderRadius: '12px', padding: '12px', textAlign: 'center' as const, border: '1px solid #2a3a4a' };
+  const inp = { width: '100%', padding: '10px', background: '#0d1520', border: '1px solid #2a3a4a', borderRadius: '8px', color: '#fff', fontSize: '13px', marginBottom: '10px', boxSizing: 'border-box' as const };
 
   return (
     <div>
-      <div style={{ marginBottom: '20px' }}>
-        <h2 style={{ color: '#fff', fontSize: '20px', margin: '0 0 4px 0' }}>👑 Админ-панель</h2>
-      </div>
+      <h2 style={{ color: '#fff', fontSize: '20px', margin: '0 0 16px 0' }}>👑 Админ-панель</h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '16px' }}>
-        <div style={{ background: '#1a2332', borderRadius: '12px', padding: '12px', textAlign: 'center', border: '1px solid #2a3a4a' }}>
+        <div style={box}>
           <div style={{ color: '#fff', fontSize: '20px', fontWeight: 700 }}>{auctions.length}</div>
           <div style={{ color: '#8899aa', fontSize: '11px' }}>Всего</div>
         </div>
-        <div style={{ background: '#1a2332', borderRadius: '12px', padding: '12px', textAlign: 'center', border: '1px solid #2a3a4a' }}>
-          <div style={{ color: '#00ff88', fontSize: '20px', fontWeight: 700 }}>{activeCount}</div>
+        <div style={box}>
+          <div style={{ color: '#00ff88', fontSize: '20px', fontWeight: 700 }}>{active}</div>
           <div style={{ color: '#8899aa', fontSize: '11px' }}>Активных</div>
         </div>
-        <div style={{ background: '#1a2332', borderRadius: '12px', padding: '12px', textAlign: 'center', border: '1px solid #2a3a4a' }}>
-          <div style={{ color: '#00d4ff', fontSize: '20px', fontWeight: 700 }}>{totalBids}</div>
+        <div style={box}>
+          <div style={{ color: '#00d4ff', fontSize: '20px', fontWeight: 700 }}>{bids}</div>
           <div style={{ color: '#8899aa', fontSize: '11px' }}>Ставок</div>
         </div>
       </div>
@@ -70,16 +66,18 @@ const Admin: React.FC<Props> = ({ auctions, onCreate, onDelete, onStop }) => {
       {showForm && (
         <div style={{ background: '#1a2332', borderRadius: '14px', padding: '16px', marginBottom: '16px', border: '1px solid #2a3a4a' }}>
           <div style={{ color: '#fff', fontSize: '15px', fontWeight: 600, marginBottom: '12px' }}>Новый аукцион</div>
-          <input placeholder="Название аукциона" value={title} onChange={e => setTitle(e.target.value)} style={{ width: '100%', padding: '10px', background: '#0d1520', border: '1px solid #2a3a4a', borderRadius: '8px', color: '#fff', fontSize: '13px', marginBottom: '10px', boxSizing: 'border-box' }} />
-          <input type="number" placeholder="Макс. участников" value={maxParticipants} onChange={e => setMaxParticipants(e.target.value)} style={{ width: '100%', padding: '10px', background: '#0d1520', border: '1px solid #2a3a4a', borderRadius: '8px', color: '#fff', fontSize: '13px', marginBottom: '10px', boxSizing: 'border-box' }} />
-          <textarea rows={4} placeholder="Сид-фраза (24 слова через пробел)" value={seedPhrase} onChange={e => setSeedPhrase(e.target.value)} style={{ width: '100%', padding: '10px', background: '#0d1520', border: '1px solid #2a3a4a', borderRadius: '8px', color: '#fff', fontSize: '13px', marginBottom: '4px', boxSizing: 'border-box', resize: 'none' }} />
-          <div style={{ color: '#8899aa', fontSize: '11px', marginBottom: '10px' }}>Слов: {seedPhrase.trim() ? seedPhrase.trim().split(/\s+/).length : 0} / 24</div>
+          <input placeholder="Название" value={title} onChange={e => setTitle(e.target.value)} style={inp} />
+          <input type="number" placeholder="Макс. участников" value={max} onChange={e => setMax(e.target.value)} style={inp} />
+          <textarea rows={4} placeholder="Сид-фраза (24 слова)" value={seed} onChange={e => setSeed(e.target.value)} style={{ ...inp, resize: 'none' as const }} />
+          <div style={{ color: '#8899aa', fontSize: '11px', marginBottom: '10px' }}>
+            Слов: {seed.trim() ? seed.trim().split(/\s+/).length : 0} / 24
+          </div>
           <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
-            {[{ v: '1', l: '1ч' }, { v: '6', l: '6ч' }, { v: '24', l: '1д' }, { v: '72', l: '3д' }, { v: '168', l: '7д' }].map(d => (
-              <button key={d.v} onClick={() => setHours(d.v)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: hours === d.v ? '#00d4ff' : '#0d1520', color: hours === d.v ? '#000' : '#8899aa' }}>{d.l}</button>
+            {[['1','1ч'],['6','6ч'],['24','1д'],['72','3д'],['168','7д']].map(d => (
+              <button key={d[0]} onClick={() => setHrs(d[0])} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: hrs === d[0] ? '#00d4ff' : '#0d1520', color: hrs === d[0] ? '#000' : '#8899aa' }}>{d[1]}</button>
             ))}
           </div>
-          <button onClick={handleCreate} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #00d4ff, #7b2ff2)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>✓ Создать аукцион</button>
+          <button onClick={handleCreate} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #00d4ff, #7b2ff2)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>✓ Создать</button>
         </div>
       )}
 
@@ -88,11 +86,11 @@ const Admin: React.FC<Props> = ({ auctions, onCreate, onDelete, onStop }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
             <div style={{ color: '#fff', fontSize: '15px', fontWeight: 600 }}>{a.title}</div>
             <div style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', background: a.status === 'active' ? '#00ff8822' : '#ff444422', color: a.status === 'active' ? '#00ff88' : '#ff4444' }}>
-              {a.status === 'active' ? 'Активен' : 'Завершён'}
+              {a.status === 'active' ? 'Активен' : 'Стоп'}
             </div>
           </div>
           <div style={{ color: '#8899aa', fontSize: '12px', marginBottom: '8px' }}>
-            Ставок: {a.totalBids || 0} | Участников: {a.currentParticipants || 0}/{a.maxParticipants}
+            Ставок: {a.totalBids || 0} | {a.currentParticipants || 0}/{a.maxParticipants}
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {a.status === 'active' && (

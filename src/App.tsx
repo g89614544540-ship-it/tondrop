@@ -38,7 +38,7 @@ const App: React.FC = () => {
     alert('Ставка ' + amount + ' TON принята!');
   };
 
-  const handleDeposit = (amount: number) => {
+  const handleDeposit = (_amount: number) => {
     window.open('https://t.me/CryptoBot?start=pay', '_blank');
     alert('После оплаты через Crypto Bot баланс обновится автоматически.');
   };

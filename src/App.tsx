@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import NavBar from './components/NavBar';
 import Home from './pages/Home';
 import Auctions from './pages/Auctions';
@@ -8,12 +8,24 @@ import Wallet from './pages/Wallet';
 import Admin from './pages/Admin';
 import './App.css';
 
+const API = 'https://tondrop-backend-v2.vercel.app/api';
+
 const App: React.FC = () => {
   const [page, setPage] = useState('home');
   const [balance, setBalance] = useState(0);
   const [selectedAuction, setSelectedAuction] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [clickCount, setClickCount] = useState(0);
+  const [auctions, setAuctions] = useState<any[]>([]);
+
+  const userId = '123';
+
+  useEffect(() => {
+    fetch(`${API}/balance.js?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => setBalance(data.balance))
+      .catch(err => console.error('Balance error:', err));
+  }, []);
 
   const handleDiamondClick = () => {
     const newCount = clickCount + 1;
@@ -23,8 +35,6 @@ const App: React.FC = () => {
       setClickCount(0);
     }
   };
-
-  const [auctions, setAuctions] = useState<any[]>([]);
 
   const handleBid = (auctionId: number, amount: number) => {
     if (amount > balance) {
@@ -38,9 +48,20 @@ const App: React.FC = () => {
     alert('Ставка ' + amount + ' TON принята!');
   };
 
-  const handleDeposit = (_amount: number) => {
-    window.open('https://t.me/CryptoBot?start=pay', '_blank');
-    alert('После оплаты через Crypto Bot баланс обновится автоматически.');
+  const handleDeposit = (amount: number) => {
+    fetch(`${API}/deposit.js`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, amount })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setBalance(data.newBalance);
+          alert('Баланс пополнен! Новый баланс: ' + data.newBalance + ' TON');
+        }
+      })
+      .catch(err => console.error('Deposit error:', err));
   };
 
   const handleWithdraw = (amount: number) => {
@@ -48,7 +69,7 @@ const App: React.FC = () => {
       alert('Недостаточно средств!');
       return;
     }
-    alert('Заявка на вывод ' + amount + ' TON создана. Средства поступят в течение 24 часов.');
+    alert('Заявка на вывод ' + amount + ' TON создана.');
   };
 
   const handleCreateAuction = (data: any) => {
@@ -103,7 +124,7 @@ const App: React.FC = () => {
         {renderPage()}
       </div>
       {isAdmin && (
-        <button onClick={() => { setPage('admin'); setSelectedAuction(null); }} style={{ position: 'fixed', top: '10px', right: '10px', background: '#ff990033', border: '1px solid #ff9900', borderRadius: '10px', padding: '8px 14px', color: '#ffaa00', fontSize: '13px', fontWeight: 600, cursor: 'pointer', zIndex: 1000 }}>👑 Админ</button>
+        <button onClick={() => { setPage('admin'); setSelectedAuction(null); }} style={{ position: 'fixed', top: '10px', right: '10px', background: '#ff990033', border: '1px solid #ff9900', borderRadius: '10px', padding: '8px 14px', color: '#ffaa00', fontSize: '13px', fontWeight: 600, cursor: 'pointer', zIndex: 1000 }}>🔒 Админ</button>
       )}
       <NavBar current={page} onNavigate={(p: string) => { setPage(p); setSelectedAuction(null); }} />
     </div>

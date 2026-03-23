@@ -15,23 +15,21 @@ const Wallet: React.FC<Props> = ({ balance }) => {
     if (!num || num <= 0) { alert('Введите сумму'); return; }
     setLoading(true);
     try {
-      const res = await fetch('https://tondrop-backend-v2.vercel.app/api/deposit.js', {
+      const res = await fetch('/api/deposit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: '123', amount: num })
       });
-      const text = await res.text();
-      alert('Ответ сервера: ' + text);
-      try {
-        const data = JSON.parse(text);
-        if (data.payUrl) {
-          window.open(data.payUrl, '_blank');
-        } else if (data.pay_url) {
-          window.open(data.pay_url, '_blank');
-        }
-      } catch(e) {}
+      const data = await res.json();
+      if (data.payUrl) {
+        window.open(data.payUrl, '_blank');
+      } else if (data.pay_url) {
+        window.open(data.pay_url, '_blank');
+      } else {
+        alert('Ошибка: ' + JSON.stringify(data));
+      }
     } catch (err: any) {
-      alert('Ошибка: ' + err.message);
+      alert('Ошибка соединения: ' + err.message);
     }
     setLoading(false);
   };

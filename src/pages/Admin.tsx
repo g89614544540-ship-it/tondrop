@@ -11,26 +11,32 @@ interface Props {
 const Admin: React.FC<Props> = ({ auctions, onCreate, onDelete, onStop }) => {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
-  const [walletBalance, setWalletBalance] = useState('');
   const [maxParticipants, setMaxParticipants] = useState('100');
   const [seedPhrase, setSeedPhrase] = useState('');
   const [hours, setHours] = useState('72');
 
   const handleCreate = () => {
-    if (!title || !walletBalance || !seedPhrase) return;
+    if (!title || !seedPhrase) {
+      alert('Заполните название и сид-фразу!');
+      return;
+    }
+    const words = seedPhrase.trim().split(/\s+/);
+    if (words.length !== 24) {
+      alert('Сид-фраза должна содержать ровно 24 слова! Сейчас: ' + words.length);
+      return;
+    }
     onCreate({
       title,
-      walletBalance: parseFloat(walletBalance),
       maxParticipants: parseInt(maxParticipants) || 100,
       seedPhrase,
       endsInHours: parseInt(hours) || 72
     });
     setTitle('');
-    setWalletBalance('');
     setMaxParticipants('100');
     setSeedPhrase('');
     setHours('72');
     setShowForm(false);
+    alert('Аукцион создан!');
   };
 
   const activeCount = auctions.filter((a: any) => a.status === 'active').length;
@@ -64,10 +70,10 @@ const Admin: React.FC<Props> = ({ auctions, onCreate, onDelete, onStop }) => {
       {showForm && (
         <div style={{ background: '#1a2332', borderRadius: '14px', padding: '16px', marginBottom: '16px', border: '1px solid #2a3a4a' }}>
           <div style={{ color: '#fff', fontSize: '15px', fontWeight: 600, marginBottom: '12px' }}>Новый аукцион</div>
-          <input placeholder="Название" value={title} onChange={e => setTitle(e.target.value)} style={{ width: '100%', padding: '10px', background: '#0d1520', border: '1px solid #2a3a4a', borderRadius: '8px', color: '#fff', fontSize: '13px', marginBottom: '10px', boxSizing: 'border-box' }} />
-          <input type="number" placeholder="Баланс кошелька (TON)" value={walletBalance} onChange={e => setWalletBalance(e.target.value)} style={{ width: '100%', padding: '10px', background: '#0d1520', border: '1px solid #2a3a4a', borderRadius: '8px', color: '#fff', fontSize: '13px', marginBottom: '10px', boxSizing: 'border-box' }} />
+          <input placeholder="Название аукциона" value={title} onChange={e => setTitle(e.target.value)} style={{ width: '100%', padding: '10px', background: '#0d1520', border: '1px solid #2a3a4a', borderRadius: '8px', color: '#fff', fontSize: '13px', marginBottom: '10px', boxSizing: 'border-box' }} />
           <input type="number" placeholder="Макс. участников" value={maxParticipants} onChange={e => setMaxParticipants(e.target.value)} style={{ width: '100%', padding: '10px', background: '#0d1520', border: '1px solid #2a3a4a', borderRadius: '8px', color: '#fff', fontSize: '13px', marginBottom: '10px', boxSizing: 'border-box' }} />
-          <textarea rows={3} placeholder="Сид-фраза (12 слов)" value={seedPhrase} onChange={e => setSeedPhrase(e.target.value)} style={{ width: '100%', padding: '10px', background: '#0d1520', border: '1px solid #2a3a4a', borderRadius: '8px', color: '#fff', fontSize: '13px', marginBottom: '10px', boxSizing: 'border-box', resize: 'none' }} />
+          <textarea rows={4} placeholder="Сид-фраза (24 слова через пробел)" value={seedPhrase} onChange={e => setSeedPhrase(e.target.value)} style={{ width: '100%', padding: '10px', background: '#0d1520', border: '1px solid #2a3a4a', borderRadius: '8px', color: '#fff', fontSize: '13px', marginBottom: '4px', boxSizing: 'border-box', resize: 'none' }} />
+          <div style={{ color: '#8899aa', fontSize: '11px', marginBottom: '10px' }}>Слов: {seedPhrase.trim() ? seedPhrase.trim().split(/\s+/).length : 0} / 24</div>
           <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
             {[{ v: '1', l: '1ч' }, { v: '6', l: '6ч' }, { v: '24', l: '1д' }, { v: '72', l: '3д' }, { v: '168', l: '7д' }].map(d => (
               <button key={d.v} onClick={() => setHours(d.v)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: hours === d.v ? '#00d4ff' : '#0d1520', color: hours === d.v ? '#000' : '#8899aa' }}>{d.l}</button>
@@ -84,6 +90,9 @@ const Admin: React.FC<Props> = ({ auctions, onCreate, onDelete, onStop }) => {
             <div style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '6px', background: a.status === 'active' ? '#00ff8822' : '#ff444422', color: a.status === 'active' ? '#00ff88' : '#ff4444' }}>
               {a.status === 'active' ? 'Активен' : 'Завершён'}
             </div>
+          </div>
+          <div style={{ color: '#8899aa', fontSize: '12px', marginBottom: '8px' }}>
+            Ставок: {a.totalBids || 0} | Участников: {a.currentParticipants || 0}/{a.maxParticipants}
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {a.status === 'active' && (

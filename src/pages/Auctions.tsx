@@ -16,16 +16,14 @@ const Auctions: React.FC<Props> = ({ auctions, onSelect }) => {
         <div style={{ textAlign: 'center', padding: '40px 0', color: '#8899aa' }}>
           <div style={{ fontSize: '40px', marginBottom: '10px' }}>📭</div>
           <div>Нет активных аукционов</div>
+          <div style={{ fontSize: '12px', marginTop: '6px' }}>Ожидайте новых аукционов</div>
         </div>
       ) : auctions.map((a: any) => (
         <div key={a.id} onClick={() => onSelect(a.id)} style={{ background: '#1a2332', borderRadius: '16px', padding: '16px', marginBottom: '12px', border: '1px solid #2a3a4a', cursor: 'pointer' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-            <div style={{ color: '#fff', fontSize: '16px', fontWeight: 600 }}>{a.title}</div>
-            <div style={{ color: '#00d4ff', fontSize: '14px', fontWeight: 600 }}>{a.walletBalance || 0} TON</div>
-          </div>
+          <div style={{ color: '#fff', fontSize: '16px', fontWeight: 600, marginBottom: '10px' }}>{a.title}</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ color: '#8899aa', fontSize: '13px' }}>Текущая ставка</span>
-            <span style={{ color: '#fff', fontSize: '13px' }}>{a.currentBid || 0} TON</span>
+            <span style={{ color: '#00d4ff', fontSize: '13px', fontWeight: 600 }}>{a.currentBid || 0} TON</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
             <span style={{ color: '#8899aa', fontSize: '13px' }}>Участников</span>

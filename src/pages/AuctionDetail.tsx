@@ -14,7 +14,7 @@ const AuctionDetail: React.FC<Props> = ({ auction, balance, onBid }) => {
     const amount = parseFloat(bidAmount);
     if (!amount || amount <= 0) return;
     if (amount > balance) {
-      alert('Недостаточно средств');
+      alert('Недостаточно средств! Пополните баланс в разделе Кошелёк.');
       return;
     }
     onBid(auction.id, amount);
@@ -26,16 +26,16 @@ const AuctionDetail: React.FC<Props> = ({ auction, balance, onBid }) => {
       <div style={{ background: 'linear-gradient(135deg, #00d4ff22, #7b2ff222)', borderRadius: '16px', padding: '20px', marginBottom: '16px', border: '1px solid #00d4ff33' }}>
         <h2 style={{ color: '#fff', fontSize: '20px', margin: '0 0 12px 0' }}>{auction.title}</h2>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <span style={{ color: '#8899aa', fontSize: '13px' }}>Баланс кошелька</span>
-          <span style={{ color: '#00d4ff', fontWeight: 700 }}>{auction.walletBalance || 0} TON</span>
+          <span style={{ color: '#8899aa', fontSize: '13px' }}>Текущая ставка</span>
+          <span style={{ color: '#00d4ff', fontWeight: 700 }}>{auction.currentBid || 0} TON</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <span style={{ color: '#8899aa', fontSize: '13px' }}>Текущая ставка</span>
-          <span style={{ color: '#fff', fontWeight: 600 }}>{auction.currentBid || 0} TON</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ color: '#8899aa', fontSize: '13px' }}>Участников</span>
           <span style={{ color: '#fff' }}>{auction.currentParticipants || 0}/{auction.maxParticipants || 0}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ color: '#8899aa', fontSize: '13px' }}>Всего ставок</span>
+          <span style={{ color: '#fff' }}>{auction.totalBids || 0}</span>
         </div>
       </div>
 

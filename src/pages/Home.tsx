@@ -5,13 +5,14 @@ interface Props {
   friends: number;
   auctions: number;
   isAdmin: boolean;
+  onDiamondClick: () => void;
 }
 
-const Home: React.FC<Props> = ({ balance, friends, auctions, isAdmin }) => {
+const Home: React.FC<Props> = ({ balance, friends, auctions, isAdmin, onDiamondClick }) => {
   return (
     <div>
       <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <div style={{ fontSize: '48px', marginBottom: '8px' }}>💎</div>
+        <div onClick={onDiamondClick} style={{ fontSize: '48px', marginBottom: '8px', cursor: 'pointer', userSelect: 'none' }}>💎</div>
         <h1 style={{ fontSize: '28px', color: '#fff', margin: '0 0 4px 0' }}>TonDrop</h1>
         <p style={{ color: '#8899aa', fontSize: '14px', margin: '0 0 30px 0' }}>Аукцион сид-фраз TON</p>
       </div>

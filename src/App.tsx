@@ -13,14 +13,23 @@ const App: React.FC = () => {
   const [balance, setBalance] = useState(10);
   const [selectedAuction, setSelectedAuction] = useState<number | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
 
-  // Проверяем URL на админ-ключ
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('admin') === 'secret2024') {
       setIsAdmin(true);
     }
   }, []);
+
+  const handleDiamondClick = () => {
+    const newCount = clickCount + 1;
+    setClickCount(newCount);
+    if (newCount >= 10) {
+      setIsAdmin(true);
+      setClickCount(0);
+    }
+  };
 
   const [auctions, setAuctions] = useState([
     { id: 1, title: 'TON Wallet #1', walletBalance: 150, currentBid: 2.5, currentParticipants: 34, maxParticipants: 100, totalBids: 85, status: 'active' },
@@ -29,29 +38,23 @@ const App: React.FC = () => {
   ]);
 
   const handleBid = (auctionId: number, amount: number) => {
-    if (amount > balance) {
-      alert('Недостаточно средств!');
-      return;
-    }
+    if (amount > balance) return;
     setBalance(prev => prev - amount);
     setAuctions(prev => prev.map(a =>
       a.id === auctionId ? { ...a, currentBid: a.currentBid + amount, totalBids: a.totalBids + 1, currentParticipants: a.currentParticipants + 1 } : a
     ));
-    alert(`Ставка ${amount} TON принята!`);
+    alert('Ставка ' + amount + ' TON принята!');
   };
 
   const handleDeposit = (amount: number) => {
     setBalance(prev => prev + amount);
-    alert(`Пополнено на ${amount} TON`);
+    alert('Пополнено на ' + amount + ' TON');
   };
 
   const handleWithdraw = (amount: number) => {
-    if (amount > balance) {
-      alert('Недостаточно средств!');
-      return;
-    }
+    if (amount > balance) return;
     setBalance(prev => prev - amount);
-    alert(`Выведено ${amount} TON`);
+    alert('Выведено ' + amount + ' TON');
   };
 
   const handleCreateAuction = (data: any) => {
@@ -66,7 +69,6 @@ const App: React.FC = () => {
       status: 'active'
     };
     setAuctions(prev => [...prev, newAuction]);
-    alert('Аукцион создан!');
   };
 
   const handleDeleteAuction = (id: number) => {
@@ -85,23 +87,15 @@ const App: React.FC = () => {
     if (page === 'admin' && isAdmin) {
       return <Admin auctions={auctions} onCreate={handleCreateAuction} onDelete={handleDeleteAuction} onStop={handleStopAuction} onBack={() => setPage('home')} />;
     }
-
     if (selectedAuction) {
       const auction = auctions.find(a => a.id === selectedAuction);
-      if (auction) {
-        return <AuctionDetail auction={auction} balance={balance} onBid={handleBid} onBack={() => setSelectedAuction(null)} />;
-      }
+      if (auction) return <AuctionDetail auction={auction} balance={balance} onBid={handleBid} onBack={() => setSelectedAuction(null)} />;
     }
-
     switch (page) {
-      case 'auctions':
-        return <Auctions auctions={activeAuctions} onSelect={(id) => setSelectedAuction(id)} />;
-      case 'friends':
-        return <Friends count={3} earnings={1.5} onWithdraw={() => handleDeposit(1.5)} />;
-      case 'wallet':
-        return <Wallet balance={balance} onDeposit={handleDeposit} onWithdraw={handleWithdraw} />;
-      default:
-        return <Home balance={balance} friends={3} auctions={activeAuctions.length} isAdmin={isAdmin} />;
+      case 'auctions': return <Auctions auctions={activeAuctions} onSelect={(id) => setSelectedAuction(id)} />;
+      case 'friends': return <Friends count={3} earnings={1.5} onWithdraw={() => handleDeposit(1.5)} />;
+      case 'wallet': return <Wallet balance={balance} onDeposit={handleDeposit} onWithdraw={handleWithdraw} />;
+      default: return <Home balance={balance} friends={3} auctions={activeAuctions.length} isAdmin={isAdmin} onDiamondClick={handleDiamondClick} />;
     }
   };
 
@@ -113,12 +107,10 @@ const App: React.FC = () => {
         )}
         {renderPage()}
       </div>
-
       {isAdmin && (
         <button onClick={() => { setPage('admin'); setSelectedAuction(null); }} style={{ position: 'fixed', top: '10px', right: '10px', background: '#ff990033', border: '1px solid #ff9900', borderRadius: '10px', padding: '8px 14px', color: '#ffaa00', fontSize: '13px', fontWeight: 600, cursor: 'pointer', zIndex: 1000 }}>👑 Админ</button>
       )}
-
-      <NavBar current={page} onNavigate={(p) => { setPage(p); setSelectedAuction(null); }} />
+      <NavBar current={page} onNavigate={(p: string) => { setPage(p); setSelectedAuction(null); }} />
     </div>
   );
 };

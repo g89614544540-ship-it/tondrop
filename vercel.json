@@ -1,5 +1,8 @@
-{
+ъ{
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite"
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://tondrop-backend-v2.vercel.app/api/:path*" }
+  ]
 }

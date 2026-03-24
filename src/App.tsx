@@ -244,9 +244,28 @@ const App: React.FC = () => {
       alert('Минимальный вывод: 1 TON');
       return;
     }
-    const newBalance = balance - amount;
-    await updateBalance(newBalance);
-    alert('Заявка на вывод ' + amount + ' TON создана! Средства поступят в течение 24 часов.');
+    try {
+      const response = await fetch('/api/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, amount })
+      });
+      const data = await response.json();
+      if (data.ok && data.checkUrl) {
+        setBalance(data.balance);
+        const tg = (window as any).Telegram?.WebApp;
+        if (tg) {
+          tg.openTelegramLink(data.checkUrl);
+        } else {
+          window.open(data.checkUrl, '_blank');
+        }
+        alert('Чек на ' + amount + ' TON создан! Откройте ссылку чтобы забрать.');
+      } else {
+        alert('Ошибка вывода: ' + (data.error || 'попробуйте позже'));
+      }
+    } catch (err) {
+      alert('Ошибка сети');
+    }
   };
 
   const handleReferralWithdraw = async () => {

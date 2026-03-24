@@ -39,7 +39,6 @@ const App: React.FC = () => {
   const [referralCount, setReferralCount] = useState(0);
   const [referralEarnings, setReferralEarnings] = useState(0);
 
-  // Инициализация Telegram
   useEffect(() => {
     const tg = (window as any).Telegram?.WebApp;
     if (tg) {
@@ -50,31 +49,24 @@ const App: React.FC = () => {
     setUserId(id);
   }, []);
 
-  // Загрузка данных пользователя
   const loadUserData = async () => {
     if (!userId) return;
-    
     const { data } = await supabase.from('users').select('*').eq('id', userId).single();
-    
     if (data) {
       setBalance(data.balance || 0);
       setReferralCode(data.referral_code || generateReferralCode(userId));
       setReferralEarnings(data.referral_earnings || 0);
     } else {
       const code = generateReferralCode(userId);
-      // Проверяем реферальную ссылку
       const tg = (window as any).Telegram?.WebApp;
       const startParam = tg?.initDataUnsafe?.start_param || '';
-      
-      await supabase.from('users').insert({ 
-        id: userId, 
-        balance: 0, 
+      await supabase.from('users').insert({
+        id: userId,
+        balance: 0,
         referral_code: code,
         referred_by: startParam || null,
         referral_earnings: 0
       });
-      
-      // Если пришёл по реферальной ссылке
       if (startParam) {
         await supabase.from('referrals').insert({
           referrer_id: startParam.replace('TD_', ''),
@@ -82,29 +74,25 @@ const App: React.FC = () => {
           earned: 0
         });
       }
-      
       setReferralCode(code);
       setBalance(0);
     }
   };
 
-  // Загрузка рефералов
   const loadReferrals = async () => {
     if (!userId) return;
-    const { data, count } = await supabase
+    const { count } = await supabase
       .from('referrals')
       .select('*', { count: 'exact' })
       .eq('referrer_id', userId);
     setReferralCount(count || 0);
   };
 
-  // Загрузка аукционов из Supabase
   const loadAuctions = async () => {
     const { data } = await supabase
       .from('auctions')
       .select('*')
       .order('created_at', { ascending: false });
-    
     if (data) {
       setAuctions(data.map(a => ({
         id: a.id,
@@ -126,13 +114,10 @@ const App: React.FC = () => {
       loadUserData();
       loadReferrals();
       loadAuctions();
-      
-      // Автообновление баланса каждые 10 секунд
       const interval = setInterval(() => {
         loadUserData();
         loadAuctions();
       }, 10000);
-      
       return () => clearInterval(interval);
     }
   }, [userId]);
@@ -164,24 +149,18 @@ const App: React.FC = () => {
     }
   };
 
-  // Ставка на аукцион (сохраняется в Supabase)
   const handleBid = async (auctionId: number, amount: number) => {
     if (amount > balance) {
       alert('Недостаточно средств! Пополните баланс.');
       return;
     }
-    
     const newBalance = balance - amount;
     await updateBalance(newBalance);
-    
-    // Сохраняем ставку
     await supabase.from('bids').insert({
       auction_id: auctionId,
       user_id: userId,
       amount: amount
     });
-    
-    // Обновляем аукцион
     const auction = auctions.find(a => a.id === auctionId);
     if (auction) {
       await supabase.from('auctions').update({
@@ -190,10 +169,7 @@ const App: React.FC = () => {
         current_participants: auction.currentParticipants + 1
       }).eq('id', auctionId);
     }
-    
     await loadAuctions();
-    
-    // Реферальный бонус 5%
     const { data: userData } = await supabase.from('users').select('referred_by').eq('id', userId).single();
     if (userData?.referred_by) {
       const referrerId = userData.referred_by.replace('TD_', '');
@@ -206,11 +182,9 @@ const App: React.FC = () => {
         }).eq('id', referrerId);
       }
     }
-    
     alert('Ставка ' + amount + ' TON принята!');
   };
 
-  // Депозит через Crypto Bot
   const handleDeposit = async (amount: number) => {
     try {
       const response = await fetch('https://pay.crypt.bot/api/createInvoice', {
@@ -228,12 +202,31 @@ const App: React.FC = () => {
       });
       const data = await response.json();
       if (data.ok && data.result) {
+        const invoiceId = data.result.invoice_id;
         const tg = (window as any).Telegram?.WebApp;
         if (tg) {
-          tg.openTelegramLink('https://t.me/CryptoBot?start=' + data.result.invoice_id);
+          tg.openTelegramLink('https://t.me/CryptoBot?start=' + invoiceId);
         } else {
           window.open(data.result.pay_url, '_blank');
         }
+        let checks = 0;
+        const checker = setInterval(async () => {
+          checks++;
+          if (checks > 60) { clearInterval(checker); return; }
+          try {
+            const checkRes = await fetch('/api/check-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ invoiceId, userId, amount })
+            });
+            const checkData = await checkRes.json();
+            if (checkData.paid) {
+              clearInterval(checker);
+              setBalance(checkData.balance);
+              alert('Оплата получена! +' + amount + ' TON');
+            }
+          } catch (e) {}
+        }, 5000);
       } else {
         alert('Ошибка создания инвойса');
       }
@@ -242,7 +235,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Вывод
   const handleWithdraw = async (amount: number) => {
     if (amount > balance || amount <= 0) {
       alert('Недостаточно средств!');
@@ -257,23 +249,21 @@ const App: React.FC = () => {
     alert('Заявка на вывод ' + amount + ' TON создана! Средства поступят в течение 24 часов.');
   };
 
-  // Реферальный вывод
   const handleReferralWithdraw = async () => {
     if (referralEarnings <= 0) {
       alert('Нет реферальных начислений');
       return;
     }
     const newBalance = balance + referralEarnings;
-    await supabase.from('users').update({ 
-      balance: newBalance, 
-      referral_earnings: 0 
+    await supabase.from('users').update({
+      balance: newBalance,
+      referral_earnings: 0
     }).eq('id', userId);
     setBalance(newBalance);
     setReferralEarnings(0);
     alert('Реферальные ' + referralEarnings + ' TON переведены на баланс!');
   };
 
-  // Создание аукциона (сохраняется в Supabase)
   const handleCreateAuction = async (data: any) => {
     const now = Date.now();
     const newAuction = {
@@ -287,18 +277,15 @@ const App: React.FC = () => {
       status: 'active',
       ends_at: now + data.endsInHours * 3600000
     };
-    
     await supabase.from('auctions').insert(newAuction);
     await loadAuctions();
   };
 
-  // Удаление аукциона
   const handleDeleteAuction = async (id: number) => {
     await supabase.from('auctions').delete().eq('id', id);
     await loadAuctions();
   };
 
-  // Остановка аукциона
   const handleStopAuction = async (id: number) => {
     await supabase.from('auctions').update({ status: 'stopped' }).eq('id', id);
     await loadAuctions();

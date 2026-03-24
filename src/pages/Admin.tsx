@@ -42,7 +42,7 @@ const Admin: React.FC<Props> = ({ auctions, onCreate, onDelete, onStop }) => {
 
   return (
     <div>
-      <h2 style={{ color: '#fff', fontSize: '20px', margin: '0 0 16px 0' }}>👑 Админ-панель</h2>
+      <h2 style={{ color: '#fff', fontSize: '20px', margin: '0 0 16px 0' }}>🔧 Админ-панель</h2>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '16px' }}>
         <div style={box}>
@@ -77,7 +77,9 @@ const Admin: React.FC<Props> = ({ auctions, onCreate, onDelete, onStop }) => {
               <button key={d[0]} onClick={() => setHrs(d[0])} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', fontSize: '12px', fontWeight: 600, cursor: 'pointer', background: hrs === d[0] ? '#00d4ff' : '#0d1520', color: hrs === d[0] ? '#000' : '#8899aa' }}>{d[1]}</button>
             ))}
           </div>
-          <button onClick={handleCreate} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #00d4ff, #7b2ff2)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>✓ Создать</button>
+          <button onClick={handleCreate} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #00d4ff, #7b2ff2)', border: 'none', borderRadius: '12px', color: '#fff', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+            ✓ Создать
+          </button>
         </div>
       )}
 
@@ -94,9 +96,13 @@ const Admin: React.FC<Props> = ({ auctions, onCreate, onDelete, onStop }) => {
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             {a.status === 'active' && (
-              <button onClick={() => onStop(a.id)} style={{ flex: 1, padding: '8px', background: '#ff990022', border: '1px solid #ff990044', borderRadius: '8px', color: '#ff9900', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>⏹ Стоп</button>
+              <button onClick={() => onStop(a.id)} style={{ flex: 1, padding: '8px', background: '#ff990022', border: '1px solid #ff990044', borderRadius: '8px', color: '#ff9900', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+                ⏸ Стоп
+              </button>
             )}
-            <button onClick={() => onDelete(a.id)} style={{ flex: 1, padding: '8px', background: '#ff444422', border: '1px solid #ff444444', borderRadius: '8px', color: '#ff4444', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>🗑 Удалить</button>
+            <button onClick={() => onDelete(a.id)} style={{ flex: 1, padding: '8px', background: '#ff444422', border: '1px solid #ff444444', borderRadius: '8px', color: '#ff4444', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}>
+              🗑 Удалить
+            </button>
           </div>
         </div>
       ))}

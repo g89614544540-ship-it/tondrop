@@ -12,7 +12,9 @@ const Home: React.FC<Props> = ({ balance, friends, auctions, isAdmin, onDiamondC
   return (
     <div>
       <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <div onClick={onDiamondClick} style={{ fontSize: '48px', marginBottom: '8px', cursor: 'pointer', userSelect: 'none' }}>💎</div>
+        <div onClick={onDiamondClick} style={{ fontSize: '48px', marginBottom: '8px', cursor: 'pointer', userSelect: 'none' }}>
+          💎
+        </div>
         <h1 style={{ fontSize: '28px', color: '#fff', margin: '0 0 4px 0' }}>TonDrop</h1>
         <p style={{ color: '#8899aa', fontSize: '14px', margin: '0 0 30px 0' }}>Аукцион сид-фраз TON</p>
       </div>
@@ -34,7 +36,7 @@ const Home: React.FC<Props> = ({ balance, friends, auctions, isAdmin, onDiamondC
       </div>
       {isAdmin && (
         <div style={{ background: '#2a1a00', borderRadius: '14px', padding: '14px', border: '1px solid #ff990033', textAlign: 'center' }}>
-          <span style={{ color: '#ffaa00', fontSize: '14px' }}>👑 Режим администратора активен</span>
+          <span style={{ color: '#ffaa00', fontSize: '14px' }}>🔧 Режим администратора активен</span>
         </div>
       )}
     </div>

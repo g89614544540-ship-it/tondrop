@@ -11,6 +11,16 @@ import './App.css';
 
 const CRYPTO_BOT_TOKEN = '554913:AADvDdA23vtZnXhRRUIK1lwBHzbdOWB6aml';
 
+const getTelegramUserId = (): string => {
+  try {
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      return String(tg.initDataUnsafe.user.id);
+    }
+  } catch (e) {}
+  return 'guest_' + Math.random().toString(36).substr(2, 9);
+};
+
 const App: React.FC = () => {
   const [page, setPage] = useState('home');
   const [balance, setBalance] = useState(0);
@@ -20,17 +30,29 @@ const App: React.FC = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState('');
   const [auctions, setAuctions] = useState<any[]>([]);
+  const [userId, setUserId] = useState<string>('');
 
-  const userId = '123';
+  useEffect(() => {
+    const id = getTelegramUserId();
+    setUserId(id);
+  }, []);
 
   const loadBalance = async () => {
+    if (!userId) return;
     const { data } = await supabase.from('users').select('balance').eq('id', userId).single();
-    setBalance(data ? data.balance : 0);
+    if (data) {
+      setBalance(data.balance);
+    } else {
+      await supabase.from('users').insert({ id: userId, balance: 0 });
+      setBalance(0);
+    }
   };
 
   useEffect(() => {
-    loadBalance();
-  }, []);
+    if (userId) {
+      loadBalance();
+    }
+  }, [userId]);
 
   const updateBalance = async (newBalance: number) => {
     await supabase.from('users').upsert({ id: userId, balance: newBalance });
@@ -152,6 +174,17 @@ const App: React.FC = () => {
       default: return <Home balance={balance} friends={0} auctions={activeAuctions.length} isAdmin={isAdmin} onDiamondClick={handleDiamondClick} />;
     }
   };
+
+  if (!userId) {
+    return (
+      <div style={{ background: '#0d1520', minHeight: '100vh', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '40px', marginBottom: '16px' }}>💎</div>
+          <div style={{ fontSize: '16px', color: '#8892a0' }}>Загрузка...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: '#0d1520', minHeight: '100vh', color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>

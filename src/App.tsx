@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import supabase from './supabase';
 import NavBar from './components/NavBar';
 import Home from './pages/Home';
 import Auctions from './pages/Auctions';
@@ -7,6 +8,8 @@ import Friends from './pages/Friends';
 import Wallet from './pages/Wallet';
 import Admin from './pages/Admin';
 import './App.css';
+
+const CRYPTO_BOT_TOKEN = '554913:AADvDdA23vtZnXhRRUIK1lwBHzbdOWB6aml';
 
 const App: React.FC = () => {
   const [page, setPage] = useState('home');
@@ -20,12 +23,19 @@ const App: React.FC = () => {
 
   const userId = '123';
 
+  const loadBalance = async () => {
+    const { data } = await supabase.from('users').select('balance').eq('id', userId).single();
+    setBalance(data ? data.balance : 0);
+  };
+
   useEffect(() => {
-    fetch(`/api/balance?userId=${userId}`)
-      .then(res => res.json())
-      .then(data => setBalance(data.balance || 0))
-      .catch(err => console.error('Balance error:', err));
+    loadBalance();
   }, []);
+
+  const updateBalance = async (newBalance: number) => {
+    await supabase.from('users').upsert({ id: userId, balance: newBalance });
+    setBalance(newBalance);
+  };
 
   const handleDiamondClick = () => {
     if (isAdmin) return;
@@ -49,39 +59,53 @@ const App: React.FC = () => {
     }
   };
 
-  const handleBid = (auctionId: number, amount: number) => {
+  const handleBid = async (auctionId: number, amount: number) => {
     if (amount > balance) {
       alert('Недостаточно средств! Пополните баланс.');
       return;
     }
-    setBalance(prev => prev - amount);
+    const newBalance = balance - amount;
+    await updateBalance(newBalance);
     setAuctions(prev => prev.map(a =>
       a.id === auctionId ? { ...a, currentBid: a.currentBid + amount, totalBids: a.totalBids + 1, currentParticipants: a.currentParticipants + 1 } : a
     ));
     alert('Ставка ' + amount + ' TON принята!');
   };
 
-  const handleDeposit = (amount: number) => {
-    fetch('/api/deposit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, amount })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setBalance(data.newBalance);
-        }
-      })
-      .catch(err => console.error('Deposit error:', err));
+  const handleDeposit = async (amount: number) => {
+    try {
+      const response = await fetch('https://pay.crypt.bot/api/createInvoice', {
+        method: 'POST',
+        headers: {
+          'Crypto-Pay-API-Token': CRYPTO_BOT_TOKEN,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          asset: 'TON',
+          amount: String(amount),
+          description: 'TonDrop deposit',
+          payload: JSON.stringify({ userId, amount })
+        })
+      });
+      const data = await response.json();
+      if (data.ok && data.result) {
+        window.open(data.result.pay_url, '_blank');
+      } else {
+        alert('Ошибка создания инвойса');
+      }
+    } catch (err) {
+      alert('Ошибка сети');
+    }
   };
 
-  const handleWithdraw = (amount: number) => {
-    if (amount > balance) {
+  const handleWithdraw = async (amount: number) => {
+    if (amount > balance || amount <= 0) {
       alert('Недостаточно средств!');
       return;
     }
-    alert('Заявка на вывод ' + amount + ' TON создана.');
+    const newBalance = balance - amount;
+    await updateBalance(newBalance);
+    alert('Вывод ' + amount + ' TON выполнен! Новый баланс: ' + newBalance + ' TON');
   };
 
   const handleCreateAuction = (data: any) => {
@@ -144,7 +168,7 @@ const App: React.FC = () => {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
           <div style={{ background: '#1a2332', borderRadius: '16px', padding: '24px', width: '300px', border: '1px solid #2a3a4a' }}>
             <div style={{ color: '#fff', fontSize: '16px', fontWeight: 600, marginBottom: '16px', textAlign: 'center' }}>
-              🔐 Введите пароль
+              Введите пароль
             </div>
             <input
               type="password"
@@ -169,7 +193,7 @@ const App: React.FC = () => {
 
       {isAdmin && (
         <button onClick={() => { setPage('admin'); setSelectedAuction(null); }} style={{ position: 'fixed', top: '10px', right: '10px', background: '#ff990033', border: '1px solid #ff9900', borderRadius: '10px', padding: '8px 14px', color: '#ffaa00', fontSize: '13px', fontWeight: 600, cursor: 'pointer', zIndex: 1000 }}>
-          🔧 Админ
+          Админ
         </button>
       )}
       <NavBar current={page} onNavigate={(p: string) => { setPage(p); setSelectedAuction(null); }} />
